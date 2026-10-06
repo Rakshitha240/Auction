@@ -80,7 +80,7 @@ Team
  └── Number of Players / Squad Information
 ```
 
-The budget represents the amount of money the team currently has available for bidding.
+
 
 ---
 
@@ -99,7 +99,6 @@ Player
  └── Final Price
 ```
 
-The additional auction-related information will allow the system to generate final results after the auction.
 
 ---
 
@@ -245,7 +244,6 @@ The winning bid is then deducted from the team's budget.
 
 ## UNSOLD
 
-If no valid bids are placed, the player remains unsold.
 
 The system records:
 
