@@ -1,7 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
+#include <stdbool.h>
 
-#define MAX_PLAYERS 10
+#define MAX_TEAMS 10
+#define MAX_PLAYERS 100
 
 struct Players {
     char Name[50];
@@ -11,30 +14,58 @@ struct Players {
     int sould;
     int souldToTeamID;
     int souldPrice;
-}Bit[100];
+}Bit[MAX_PLAYERS];
 
 struct Teams{
     char TeamName[50];
     int TeamID;
     int Budget;
     int NumberOfPlayers;
-}Teams[10];
+}Teams[MAX_TEAMS];
+
+// Reads one integer. Returns true on success, false on invalid input.
+bool readInt(const char *prompt, int *out) {
+    printf("%s", prompt);
+    if (scanf("%d", out) != 1) {
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) { }  // flush bad input
+        return false;
+    }
+    return true;
+}
 
 // Function to add players
 int AddPlayer(){
     int Number_of_Players;
-    printf("Enter the Number of Players: ");
-    scanf("%d", &Number_of_Players);
+    while(1){
+       if (!readInt("Enter the Number of Players (1-100): ",
+                &Number_of_Players)) {
+    printf("Invalid input! Please enter a number.\n");
+    continue;
+}
+
+    // Check array capacity
+    if (Number_of_Players < 1 || Number_of_Players > MAX_PLAYERS) {
+        printf("Number of players must be between 1 and %d.\n",
+               MAX_PLAYERS);
+        continue;
+    }
+    break;
+}
     for(int i=0; i<Number_of_Players; i++){
         printf("Enter Player %d Name: ",i+1);
-        scanf("%s", Bit[i].Name);
-        printf("Enter Player ID: ");
-        scanf("%d", &Bit[i].ID);
+        scanf("%49s", Bit[i].Name);
+
+        while (!readInt("Enter Player ID: ", &Bit[i].ID))
+        printf("Invalid number, try again.\n");
+
         printf("Enter Player Category: ");
-        scanf("%s", Bit[i].Category);
-        printf("Enter Player Starting Price: ");
-        scanf("%d", &Bit[i].startingPrice);
-        Bit[i].sould = 0;
+        scanf("%29s", Bit[i].Category);
+
+        while (!readInt("Enter Player Starting Price: ", &Bit[i].startingPrice))
+        printf("Invalid number, try again.\n");
+
+         Bit[i].sould = 0;
         Bit[i].souldToTeamID = 0;
         Bit[i].souldPrice = 0;
         printf("\n\n");
@@ -45,15 +76,30 @@ int AddPlayer(){
 // Function to add teams
 int AddTeam(){
     int number_of_teams;
-    printf("Enter the Number of Teams: ");
-    scanf("%d", &number_of_teams);
+    while(1){
+    if(!readInt("Enter the Number of Teams (1-10): ",
+                &number_of_teams)) {
+    printf("Invalid input! Please enter a number.\n");
+    continue;
+    }
+
+    // Check array capacity
+    if (number_of_teams < 1 || number_of_teams > MAX_TEAMS) {
+        printf("Number of teams must be between 1 and %d.\n",
+               MAX_TEAMS);
+        continue;
+    }
+    break;
+}
     for(int i=0; i<number_of_teams; i++){
         printf("Enter Team %d Name: ",i+1);
-        scanf("%s", Teams[i].TeamName);
-        printf("Enter Team ID: ");
-        scanf("%d", &Teams[i].TeamID);
-        printf("Enter Team Budget: ");
-        scanf("%d", &Teams[i].Budget);
+        scanf("%49s", Teams[i].TeamName);
+        while (!readInt("Enter Team ID: ", &Teams[i].TeamID)) {
+         printf("Invalid number! Try again.\n");
+          }  
+        while (!readInt("Enter Team Budget: ", &Teams[i].Budget)) {
+         printf("Invalid number! Try again.\n");
+         }
         Teams[i].NumberOfPlayers = 0;
         printf("\n\n");
     }
@@ -115,30 +161,47 @@ void StartAuction(int number_of_players, int number_of_teams) {
         int winningTeamID = -1;
 
         while (1) {
-            printf("Enter team ID and amount (1010 to end bidding for this player): ");
             int teamID, bidAmount;
-            scanf("%d", &teamID);
-            if (teamID == 1010) {
-                break;
+           if (!readInt("Enter Team ID (1010 to end bidding): ", &teamID)) {
+           printf("Invalid Team ID! Try again.\n");
+          continue;
+           }
+
+          if (teamID == 1010) {
+          break;
+           }
+
+            int j;
+            for (j = 0; j < number_of_teams; j++) {
+                if (Teams[j].TeamID == teamID) {
+                    break;
+                }
             }
-            scanf("%d", &bidAmount);
-
-int j;
-for (j = 0; j < number_of_teams; j++) {
-    if (Teams[j].TeamID == teamID) {
-        break;
-    }
+         // Check whether the team ID exists
+       if (j == number_of_teams) {
+          printf("Invalid Team ID! Try again.\n");
+        continue;
+}
+//To read bid amount safely 
+while (!readInt("Enter Bid Amount: ", &bidAmount)) {
+    printf("Invalid bid amount! Try again.\n");
 }
 
-if (j == number_of_teams) {
-    printf("Invalid team ID! Bid rejected.\n");
-    continue;
+if (bidAmount < Bit[i].startingPrice) {
+    printf("Bid must be at least the starting price!\n");
 }
-
-if (bidAmount > highestBid && bidAmount <= Teams[j].Budget) {
+else if (bidAmount <= highestBid) {
+    printf("Bid must be higher than the current highest bid!\n");
+}
+else if (bidAmount > Teams[j].Budget) {
+    printf("Insufficient team budget!\n");
+}
+else {
     highestBid = bidAmount;
     winningTeamID = Teams[j].TeamID;
 }
+
+
         }
 
         if (winningTeamID != -1) {
@@ -170,9 +233,14 @@ int main(){
 
     // Add Players and Teams
     int Number_of_Players = AddPlayer();
-
+    if (Number_of_Players == -1) {
+        return 1;
+    }
     // Add Teams
     int number_of_teams = AddTeam();
+    if (number_of_teams == -1) {
+        return 1;
+    }
     
     // Display players
     DisplayPlayers(Number_of_Players);
