@@ -162,6 +162,7 @@ void StartAuction(int number_of_players, int number_of_teams) {
 
         while (1) {
             int teamID, bidAmount;
+<<<<<<< HEAD
            if (!readInt("Enter Team ID (1010 to end bidding): ", &teamID)) {
            printf("Invalid Team ID! Try again.\n");
           continue;
@@ -202,6 +203,30 @@ else {
 }
 
 
+=======
+            scanf("%d", &teamID);
+            if (teamID == 1010) {
+                break;
+            }
+            scanf("%d", &bidAmount);
+
+int j;
+for (j = 0; j < number_of_teams; j++) {
+    if (Teams[j].TeamID == teamID) {
+        break;
+    }
+}
+
+if (j == number_of_teams) {
+    printf("Invalid team ID! Bid rejected.\n");
+    continue;
+}
+
+if (bidAmount > highestBid && bidAmount <= Teams[j].Budget) {
+    highestBid = bidAmount;
+    winningTeamID = Teams[j].TeamID;
+}
+>>>>>>> 69c697e971d09bf3e3f8fb05232dc8e9a9dabbe6
         }
 
         if (winningTeamID != -1) {
