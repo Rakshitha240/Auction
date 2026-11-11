@@ -254,4 +254,28 @@ Sold To = NONE
 Final Price = 0
 ```
 
+---
+
+# Building
+
+```sh
+gcc -Wall -Wextra -o auction TUI/auction.c
+./auction
+```
+
+On Windows, use `auction.exe` for the output file and executable name.
+
+---
+
+# Running the tests
+
+The automated tests do not require any keyboard input:
+
+```sh
+gcc -DTESTING -Wall -Wextra -o test_auction TUI/test_auction.c TUI/auction.c
+./test_auction
+```
+
+The test program prints `PASS` or `FAIL` for each case, prints a summary, and exits with `0` when every test passes.
+
 
