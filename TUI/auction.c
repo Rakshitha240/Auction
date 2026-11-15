@@ -1,8 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
+#include <stdbool.h>
 
-#define MAX_PLAYERS 100
 #define MAX_TEAMS 10
+#define MAX_PLAYERS 100
 
 struct Players {
     char Name[50];
@@ -31,43 +33,63 @@ int findTeamIndex(int teamID, const struct Teams *teams, int count){
     return -1;
 }
 
+// Reads one integer. Returns true on success, false on invalid input or EOF.
+bool readInt(const char *prompt, int *out) {
+    printf("%s", prompt);
+    if (scanf("%d", out) != 1) {
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF) { }  // flush bad input
+        return false;
+    }
+    return true;
+}
+
 // Function to add players
 int AddPlayer(){
     int Number_of_Players;
-
-    for(;;){
-        printf("Enter the Number of Players (1-%d): ", MAX_PLAYERS);
-        int result = scanf("%d", &Number_of_Players);
-
-        if(result == EOF){
-            printf("\nEnd of input. No players were added.\n");
-            return -1;
-        }
-
-        if(result != 1){
-            int c;
-            while((c = getchar()) != '\n' && c != EOF){ }
-            printf("Invalid input. Please enter a number.\n");
+    while(1){
+        if (!readInt("Enter the Number of Players (1-100): ",
+                     &Number_of_Players)) {
+            if (feof(stdin)) {
+                printf("\nEnd of input. No players were added.\n");
+                return -1;
+            }
+            printf("Invalid input! Please enter a number.\n");
             continue;
         }
 
-        if(Number_of_Players < 1 || Number_of_Players > MAX_PLAYERS){
-            printf("Number of players must be between 1 and %d.\n", MAX_PLAYERS);
+        // Check array capacity
+        if (Number_of_Players < 1 || Number_of_Players > MAX_PLAYERS) {
+            printf("Number of players must be between 1 and %d.\n",
+                   MAX_PLAYERS);
             continue;
         }
-
         break;
     }
 
     for(int i=0; i<Number_of_Players; i++){
         printf("Enter Player %d Name: ",i+1);
-        scanf("%s", Bit[i].Name);
-        printf("Enter Player ID: ");
-        scanf("%d", &Bit[i].ID);
+        scanf("%49s", Bit[i].Name);
+
+        while (!readInt("Enter Player ID: ", &Bit[i].ID)) {
+            if (feof(stdin)) {
+                printf("\nEnd of input. No players were added.\n");
+                return -1;
+            }
+            printf("Invalid number, try again.\n");
+        }
+
         printf("Enter Player Category: ");
-        scanf("%s", Bit[i].Category);
-        printf("Enter Player Starting Price: ");
-        scanf("%d", &Bit[i].startingPrice);
+        scanf("%29s", Bit[i].Category);
+
+        while (!readInt("Enter Player Starting Price: ", &Bit[i].startingPrice)) {
+            if (feof(stdin)) {
+                printf("\nEnd of input. No players were added.\n");
+                return -1;
+            }
+            printf("Invalid number, try again.\n");
+        }
+
         Bit[i].sould = 0;
         Bit[i].souldToTeamID = 0;
         Bit[i].souldPrice = 0;
@@ -79,38 +101,43 @@ int AddPlayer(){
 // Function to add teams
 int AddTeam(){
     int number_of_teams;
-
-    for(;;){
-        printf("Enter the Number of Teams (1-%d): ", MAX_TEAMS);
-        int result = scanf("%d", &number_of_teams);
-
-        if(result == EOF){
-            printf("\nEnd of input. No teams were added.\n");
-            return -1;
-        }
-
-        if(result != 1){
-            int c;
-            while((c = getchar()) != '\n' && c != EOF){ }
-            printf("Invalid input. Please enter a number.\n");
+    while(1){
+        if(!readInt("Enter the Number of Teams (1-10): ",
+                    &number_of_teams)) {
+            if (feof(stdin)) {
+                printf("\nEnd of input. No teams were added.\n");
+                return -1;
+            }
+            printf("Invalid input! Please enter a number.\n");
             continue;
         }
 
-        if(number_of_teams < 1 || number_of_teams > MAX_TEAMS){
-            printf("Number of teams must be between 1 and %d.\n", MAX_TEAMS);
+        // Check array capacity
+        if (number_of_teams < 1 || number_of_teams > MAX_TEAMS) {
+            printf("Number of teams must be between 1 and %d.\n",
+                   MAX_TEAMS);
             continue;
         }
-
         break;
     }
 
     for(int i=0; i<number_of_teams; i++){
         printf("Enter Team %d Name: ",i+1);
-        scanf("%s", Teams[i].TeamName);
-        printf("Enter Team ID: ");
-        scanf("%d", &Teams[i].TeamID);
-        printf("Enter Team Budget: ");
-        scanf("%d", &Teams[i].Budget);
+        scanf("%49s", Teams[i].TeamName);
+        while (!readInt("Enter Team ID: ", &Teams[i].TeamID)) {
+            if (feof(stdin)) {
+                printf("\nEnd of input. No teams were added.\n");
+                return -1;
+            }
+            printf("Invalid number! Try again.\n");
+        }
+        while (!readInt("Enter Team Budget: ", &Teams[i].Budget)) {
+            if (feof(stdin)) {
+                printf("\nEnd of input. No teams were added.\n");
+                return -1;
+            }
+            printf("Invalid number! Try again.\n");
+        }
         Teams[i].NumberOfPlayers = 0;
         printf("\n\n");
     }
@@ -172,21 +199,38 @@ void StartAuction(int number_of_players, int number_of_teams) {
         int winningTeamID = -1;
 
         while (1) {
-            printf("Enter team ID and amount (1010 to end bidding for this player): ");
             int teamID, bidAmount;
-            scanf("%d", &teamID);
-            if (teamID == 1010) {
-                break;
-            }
-            scanf("%d", &bidAmount);
-
-            int teamIndex = findTeamIndex(teamID, Teams, number_of_teams);
-            if (teamIndex < 0) {
-                printf("No such team: %d\n", teamID);
+            if (!readInt("Enter Team ID (1010 to end bidding): ", &teamID)) {
+                printf("Invalid Team ID! Try again.\n");
                 continue;
             }
 
-            if (bidAmount > highestBid && bidAmount <= Teams[teamIndex].Budget) {
+            if (teamID == 1010) {
+                break;
+            }
+
+            // Check whether the team ID exists
+            int teamIndex = findTeamIndex(teamID, Teams, number_of_teams);
+            if (teamIndex < 0) {
+                printf("Invalid Team ID! Try again.\n");
+                continue;
+            }
+
+            // To read bid amount safely
+            while (!readInt("Enter Bid Amount: ", &bidAmount)) {
+                printf("Invalid bid amount! Try again.\n");
+            }
+
+            if (bidAmount < Bit[i].startingPrice) {
+                printf("Bid must be at least the starting price!\n");
+            }
+            else if (bidAmount <= highestBid) {
+                printf("Bid must be higher than the current highest bid!\n");
+            }
+            else if (bidAmount > Teams[teamIndex].Budget) {
+                printf("Insufficient team budget!\n");
+            }
+            else {
                 highestBid = bidAmount;
                 winningTeamID = Teams[teamIndex].TeamID;
             }
@@ -219,23 +263,24 @@ int main(){
 
     // Add Players and Teams
     int Number_of_Players = AddPlayer();
-    if(Number_of_Players <= 0){
+    if (Number_of_Players <= 0) {
         return 1;
     }
 
     // Add Teams
     int number_of_teams = AddTeam();
-    if(number_of_teams <= 0){
+    if (number_of_teams <= 0) {
         return 1;
     }
-    
+
     // Display players
     DisplayPlayers(Number_of_Players);
 
     // Display teams
-    DisplayTeams(number_of_teams);  
+    DisplayTeams(number_of_teams);
 
     //Start Auction
     StartAuction(Number_of_Players, number_of_teams);
-}
 
+    return 0;
+}
